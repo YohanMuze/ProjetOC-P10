@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import PropTypes from "prop-types";
 import {
   createContext,
@@ -19,24 +20,39 @@ export const api = {
 export const DataProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
+  const [last, setLast] = useState(null);
+  
   const getData = useCallback(async () => {
     try {
-      setData(await api.loadData());
+      setData(await api.loadData()); 
+      
     } catch (err) {
       setError(err);
     }
   }, []);
+  function getLast(){
+    try {
+      setLast(data.events.sort((evtA, evtB) =>
+      new Date(evtA.date) < new Date(evtB.date) ? -1 : 1));
+    } catch (err) {
+      setError(err);
+    }
+  }
   useEffect(() => {
-    if (data) return;
-    getData();
+    if (!data) {
+      getData();
+    } else if (!last) {
+      getLast();
+    }
   });
-  
+
   return (
     <DataContext.Provider
       // eslint-disable-next-line react/jsx-no-constructed-context-values
       value={{
         data,
         error,
+        last,
       }}
     >
       {children}
